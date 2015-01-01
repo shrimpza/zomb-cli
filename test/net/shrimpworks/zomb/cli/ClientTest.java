@@ -63,7 +63,7 @@ public class ClientTest {
 
 		TestOutput output = new TestOutput();
 
-		Client c = new Client("http://localhost:9080/", key, output);
+		Client c = new Client(String.format("http://localhost:%d/", jadlerPort), key, output);
 
 		assertTrue(c.execute(user, query));
 
