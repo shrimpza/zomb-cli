@@ -1,19 +1,50 @@
 package net.shrimpworks.zomb.cli;
 
+import java.io.IOException;
+
+import com.eclipsesource.json.JsonObject;
+import net.shrimpworks.zomb.cli.common.HttpClient;
+
 public class Client {
 
 	private final String url;
 	private final String key;
 	private final ResponseOutput output;
 
+	private final HttpClient client;
+
 	public Client(String url, String key, ResponseOutput output) {
 		this.url = url;
 		this.key = key;
 		this.output = output;
+
+		this.client = new HttpClient(5000); // TODO configurable
 	}
 
-	public boolean execute(String user, String query) {
-		throw new UnsupportedOperationException("Not implemented");
+	public boolean execute(String user, String query) throws IOException {
+		JsonObject request = new JsonObject()
+				.add("key", key)
+				.add("user", user)
+				.add("query", query);
+
+		JsonObject json = JsonObject.readFrom(client.post(url, request.toString()));
+
+		String[] responseLines = new String[json.get("response").asArray().size()];
+		for (int i = 0; i < json.get("response").asArray().size(); i++) {
+			responseLines[i] = json.get("response").asArray().get(i).asString();
+		}
+
+		Response response = new Response(
+				json.get("plugin").asString(),
+				json.get("user").asString(),
+				json.get("query").asString(),
+				responseLines,
+				json.get("image").asString()
+		);
+
+		output.output(response);
+
+		return true;
 	}
 
 	public static final class Response {
